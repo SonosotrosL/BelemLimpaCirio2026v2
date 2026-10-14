@@ -246,6 +246,8 @@ h3{font-size:13.5px;font-weight:600;margin:0 0 8px}
 .reg-cab{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:11px}
 .reg-tit{font-size:13px;font-weight:600;color:var(--lapis);text-transform:uppercase;letter-spacing:.06em}
 .reg-botoes{display:flex;gap:8px;flex-wrap:wrap}
+.reg-grupo{margin-top:14px}
+.reg-grupo-t{font-size:11.5px;font-weight:600;color:var(--lapis);text-transform:uppercase;letter-spacing:.05em;margin:0 0 7px}
 .reg-lista{margin-top:13px;border-top:1px solid var(--linha);padding-top:11px}
 .reg-item{border-bottom:1px solid var(--linha);padding:8px 0}
 .reg-item:last-child{border-bottom:none}
@@ -1398,13 +1400,10 @@ function telaSetor(sid, unico){
   var setorLabel = s.cod || 'Setor único';
   h += '<div class="reg-box"><div class="reg-cab"><span class="reg-tit">Registro de campo</span>'
     + '<button class="btn" data-atualizar-reg="'+esc(setorLabel)+'" data-evento-reg="'+esc(e.nome)+'" data-alvo="regLista-'+s.id+'">Atualizar</button></div>'
-    + '<div class="reg-botoes">'
-      + '<a class="btn btn-p" target="_blank" rel="noopener" href="'+linkRegistro(e.nome, setorLabel, 'Início do setor')+'">Registrar início</a>'
-      + '<a class="btn" target="_blank" rel="noopener" href="'+linkRegistro(e.nome, setorLabel, 'Execução (andamento)')+'">Registrar execução</a>'
-      + '<a class="btn" target="_blank" rel="noopener" href="'+linkRegistro(e.nome, setorLabel, 'Encerramento')+'">Registrar encerramento</a>'
-      + (LINK_ENVIO_FOTOS ? '<a class="btn" target="_blank" rel="noopener" href="'+esc(LINK_ENVIO_FOTOS)+'">Enviar fotos</a>' : '')
-    + '</div>'
-    + '<p class="nota" style="margin:9px 0 0">Abre o formulário já com evento e setor preenchidos — inserir nome, função e, se quiser, foto. Quem não tem e-mail da empresa envia as fotos em “Enviar fotos”.</p>'
+    + '<div class="reg-grupo"><p class="reg-grupo-t">Com Gmail · formulário Google</p><div class="reg-botoes">' + botoesRegistro(linkRegistro, e.nome, setorLabel) + '</div></div>'
+    + '<div class="reg-grupo"><p class="reg-grupo-t">Com e-mail da empresa · formulário Microsoft</p><div class="reg-botoes">' + botoesRegistro(linkRegistroMS, e.nome, setorLabel)
+      + (LINK_ENVIO_FOTOS ? '<a class="btn" target="_blank" rel="noopener" href="'+esc(LINK_ENVIO_FOTOS)+'">Enviar fotos</a>' : '') + '</div></div>'
+    + '<p class="nota" style="margin:11px 0 0">Escolha o formulário conforme a conta que você tem. Os dois abrem já com evento e setor preenchidos. No formulário Microsoft, as fotos são enviadas em “Enviar fotos”.</p>'
     + '<div class="reg-lista" id="regLista-'+s.id+'"><p class="nota">Carregando registros…</p></div>'
     + '</div>';
 
@@ -1968,31 +1967,58 @@ document.getElementById('dlg').addEventListener('click', function(e){ if (e.targ
 document.getElementById('dlgInp').addEventListener('keydown', function(e){ if (e.key === 'Enter') document.getElementById('dlgOk').click(); });
 
 /* ---------------- registro de campo (Google Forms + Sheets) ---------------- */
-/* ---------- Registro de campo: Microsoft Forms (versão de teste) ----------
-   Os botões abrem o formulário já com momento, evento e setor preenchidos.
-   Cada pergunta do Microsoft Forms tem um id (o "r..." do link de "Obter URL previamente preenchida"). */
-var FORM_BASE = 'https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=l9bCMdfE_Uus3i_et37CHFXCTF6ZjY9MiGQyT3nIPTBUOTJFN1M0SVZHT1FGR1hPSlUzRkJFMFowNy4u';
+var FORM_BASE = 'https://docs.google.com/forms/d/e/1FAIpQLSdK3Vu5GhNavt0FMctmVgD4D6-NxdzqKnlpV4a-fuip-NpBwQ/viewform';
 var FORM_ENTRIES = {
+  momento: 'entry.440190225',
+  evento:  'entry.2009079921',
+  setor:   'entry.133328617',
+  nome:    'entry.838665184',
+  funcao:  'entry.121204712',
+  agentes: 'entry.1218780267',
+  hora:    'entry.544171430'
+};
+var CSV_URL = 'https://docs.google.com/spreadsheets/d/1BtFzgQUBSyiGxeJEAglpP4WyREB2PB301ld8rhweQAs/gviz/tq?tqx=out:csv&gid=1105202098';
+
+function linkRegistro(eventoNome, setorLabel, momento){
+  var d = new Date();
+  var hora = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  var p = [];
+  p.push('usp=pp_url');
+  p.push(FORM_ENTRIES.momento + '=' + encodeURIComponent(momento));
+  p.push(FORM_ENTRIES.evento + '=' + encodeURIComponent(eventoNome));
+  p.push(FORM_ENTRIES.setor + '=' + encodeURIComponent(setorLabel));
+  p.push(FORM_ENTRIES.hora + '=' + encodeURIComponent(hora));
+  return FORM_BASE + '?' + p.join('&');
+}
+
+/* ---------- Registro de campo: formulário Microsoft (para quem usa o e-mail da empresa) ----------
+   Cada pergunta do Microsoft Forms tem um id (o "r..." do link de "Obter URL previamente preenchida"). */
+var FORM_MS_BASE = 'https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=l9bCMdfE_Uus3i_et37CHFXCTF6ZjY9MiGQyT3nIPTBUOTJFN1M0SVZHT1FGR1hPSlUzRkJFMFowNy4u';
+var FORM_MS_ENTRIES = {
   momento: 'r3c27a8a6fa0a4af0be14a0f4afa1ec13',   /* escolha */
   evento:  're7bd04657e854c798afe3a7b2b372294',   /* escolha */
   setor:   'r62983a6ec5064bc5ba531f88ae4787c9',   /* texto */
-  hora:    ''                                     /* se o formulário tiver a pergunta "Hora", coloque aqui o id dela */
+  hora:    'r9352b003db5442b4b76decbb9b2271a7'    /* texto, no formato HH:MM */
 };
-/* Quem não tem e-mail da empresa envia as fotos por aqui (solicitação de arquivos no OneDrive). */
+/* Fotos de quem usa o formulário Microsoft (solicitação de arquivos no OneDrive). */
 var LINK_ENVIO_FOTOS = 'https://belemlimpa-my.sharepoint.com/:f:/g/personal/apaiva_belemlimpa_com_br/IgBeuBK7cCEwQoMfFSXNY3Q7AXHEizCac-vbahgpsQ4RwiI';
-var CSV_URL = 'https://docs.google.com/spreadsheets/d/1BtFzgQUBSyiGxeJEAglpP4WyREB2PB301ld8rhweQAs/gviz/tq?tqx=out:csv&gid=1105202098';
 function codificaForms(v){ return encodeURIComponent(v).replace(/\(/g, '%28').replace(/\)/g, '%29'); }
-function linkRegistro(eventoNome, setorLabel, momento){
+function linkRegistroMS(eventoNome, setorLabel, momento){
+  var d = new Date();
+  var hora = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
   var p = [];
   /* pergunta de ESCOLHA: o valor vai entre aspas e tem de ser igual à opção do formulário */
-  p.push(FORM_ENTRIES.momento + '=' + codificaForms('"' + momento + '"'));
-  p.push(FORM_ENTRIES.evento + '=' + codificaForms('"' + eventoNome + '"'));
-  p.push(FORM_ENTRIES.setor + '=' + codificaForms(setorLabel));
-  if (FORM_ENTRIES.hora) {
-    var d = new Date();
-    p.push(FORM_ENTRIES.hora + '=' + codificaForms(String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0')));
-  }
-  return FORM_BASE + '&' + p.join('&');
+  p.push(FORM_MS_ENTRIES.momento + '=' + codificaForms('"' + momento + '"'));
+  p.push(FORM_MS_ENTRIES.evento + '=' + codificaForms('"' + eventoNome + '"'));
+  p.push(FORM_MS_ENTRIES.setor + '=' + codificaForms(setorLabel));
+  p.push(FORM_MS_ENTRIES.hora + '=' + codificaForms(hora));
+  return FORM_MS_BASE + '&' + p.join('&');
+}
+/* Os três botões (início, execução, encerramento) de um formulário: fn é linkRegistro (Google) ou linkRegistroMS */
+function botoesRegistro(fn, eNome, setorLabel){
+  return '<a class="btn btn-p" target="_blank" rel="noopener" href="' + fn(eNome, setorLabel, 'Início do setor') + '">Registrar início</a>'
+       + '<a class="btn" target="_blank" rel="noopener" href="' + fn(eNome, setorLabel, 'Execução (andamento)') + '">Registrar execução</a>'
+       + '<a class="btn" target="_blank" rel="noopener" href="' + fn(eNome, setorLabel, 'Encerramento') + '">Registrar encerramento</a>';
 }
 
 function normColuna(s){
